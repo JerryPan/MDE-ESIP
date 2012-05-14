@@ -1,0 +1,89 @@
+<?php
+
+/**
+ * @file
+ *
+ * Contains the hooks this module responds to. As well as any
+ * functions that need to be present for every page request.
+ */
+ini_set("auto_detect_line_endings", FALSE);
+
+/**
+ * Implements hook_register_autocomplete_source().
+ */
+function islandora_autocomplete_csv_register_autocomplete_source() {
+  return array(
+    array(
+      'type' => 'csv',
+      'label' => 'CSV',
+      'module' => 'islandora_autocomplete_csv',
+      'form' => array(
+        'type' => 'inc',
+        'file' => 'includes/islandora_autocomplete_csv.admin'
+      ),
+    )
+  );
+}
+
+/**
+ * Implements hook_delete_autocomplete_url().
+ *
+ * Called when a autocomplete url is deleted, used to notify autocomplete source modules so that
+ * they may do the neccesary clean up required.
+ *
+ * @param string $url_id
+ *   The ID of the url that is to be deleted.
+ */
+function islandora_autocomplete_csv_delete_autocomplete_url($url_id) {
+  module_load_include('inc', 'islandora_autocomplete_csv', 'includes/islandora_autocomplete_csv.db');
+  islandora_autocomplete_csv_db_delete_url_source($url_id);
+}
+
+/**
+ * Implements islandora_autocomplete_url_source();
+ *
+ * Query's the CSV file associated with the given URL.
+ *
+ * Return an alphabetically ordered list of values that match the query value.
+ *
+ * @param int $url_id
+ *   The unique identifier for the Autocomplete URL.
+ * @param string $query
+ *   The values to query against the stored CSV.
+ *
+ * @return array
+ */
+function islandora_autocomplete_url_query_csv($url_id, $query = '', $index = NULL) {
+  module_load_include('inc', 'islandora_autocomplete_csv', 'includes/islandora_autocomplete_csv.db');
+  $fields = array();
+  $source = islandora_autocomplete_csv_db_get_url_source($url_id);
+  if ($source) {
+    $handle = fopen($source->filename, 'r');
+    if ($handle) {
+      if ($index === NULL) {
+        while ($field = fgetcsv($handle)) {
+          list($k, $v) = $field;
+          $k = trim($k);
+          $v = trim($v);
+          if (empty($query) || (strpos($v, $query) === 0)) {
+            $fields[$k] = $v;
+          }
+        }
+        asort($fields); // Sort alphabetically.
+      }
+      else {
+        while ($field = fgetcsv($handle)) {
+          $results = array_chunk($field, 2);
+          list($k, $v) = $results[$index];
+          $k = trim($k);
+          $v = trim($v);
+          if (empty($query) || (strpos($v, $query) === 0)) {
+            $fields[] = $results;
+          }
+        }
+      }
+      fclose($handle);
+    }
+  }
+  return $fields;
+}

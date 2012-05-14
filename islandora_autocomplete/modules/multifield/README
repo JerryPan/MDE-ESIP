@@ -1,0 +1,8 @@
+This module allows for defining auto complete urls that return multiple values 
+as well as a new form element type 'autocomplete_group' that will populate all the child 'textfield' 
+form elements with the results from the multivalued auto complete URL.
+
+To use this create a autocomplete_group form element and populate it with the same number of textfields as 
+the field returns.
+
+Note this does not support the nesting of autocomplete_group elements.

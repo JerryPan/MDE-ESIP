@@ -1,0 +1,74 @@
+<?php
+
+/**
+ * @file
+ *
+ * Install hooks for this module.
+ */
+module_load_include('inc', 'islandora_autocomplete_csv', 'includes/islandora_autocomplete_csv.db');
+module_load_include('inc', 'islandora_autocomplete', 'includes/islandora_autocomplete.db');
+
+/**
+ * Implementation of hook_install().
+ */
+function islandora_autocomplete_csv_install() {
+  drupal_install_schema('islandora_autocomplete_csv');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function islandora_autocomplete_csv_uninstall() {
+  islandora_autocomplete_csv_delete_files();
+  islandora_autocomplete_csv_delete_urls();
+  drupal_uninstall_schema(TABLE_ISLANDORA_AUTOCOMPLETE_CSV);
+}
+
+/**
+ * Deletes all stored files assocated with the stored urls.s
+ */
+function islandora_autocomplete_csv_delete_files() {
+  $sources = islandora_autocomplete_csv_db_get_url_sources();
+  while ($source = db_fetch_object($sources)) {
+    file_delete($source->filename);
+  }
+}
+
+/**
+ * Deletes the urls that reference csv as a source. As well as the csv row via the delete hook.
+ */
+function islandora_autocomplete_csv_delete_urls() {
+  $sources = islandora_autocomplete_csv_db_get_url_sources();
+  while ($source = db_fetch_object($sources)) {
+    islandora_autocomplete_db_delete_url($source->url_id);
+  }
+}
+
+/**
+ * Implementation of hook_schema().
+ *
+ * @return array
+ */
+function islandora_autocomplete_csv_schema() {
+  return array(
+    TABLE_ISLANDORA_AUTOCOMPLETE_CSV => array(
+      'description' => t('The main table for storing islandora autocomplete urls.'),
+      'fields' => array(
+        'id' => array(
+          'type' => 'serial',
+          'not null' => TRUE,
+        ),
+        'url_id' => array(
+          'type' => 'int',
+          'not null' => TRUE
+        ),
+        'filename' => array(
+          'type' => 'varchar',
+          'length' => 256,
+          'not null' => TRUE,
+        )
+      ),
+      'primary key' => array('id'),
+    )
+  );
+}

@@ -1,0 +1,6 @@
+name = Islandora Autocomplete CSV
+description = Allows users to define Autocomplete URL's that get populated by an uploaded CSV.
+package = Islandora Tools
+dependencies[] = islandora_autocomplete
+version = 11.3.1
+core = 6.x

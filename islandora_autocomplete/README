@@ -1,0 +1,31 @@
+Islandora Auto-complete allows users to define auto-complete URL's to be used in a 
+Drupal forms in conjuction with the #autocomplete property of form elements.
+
+HOOK_delete_autocomplete_url($id)
+
+Notifies modules that an autcomplete url is being deleted so they may perform any clean up needed.
+
+HOOK_register_autocomplete_source()
+
+Registers an autocomplete source. Used to load a source settings form from the module.
+
+Returns an array like so,
+  array(
+    'type' => 'machine readable name of source',
+    'label' => 'human readable name of source',
+    'module' => 'module anem',
+    'form' => array( // Describes where the source form is defined.
+      'type' => 'file type',
+      'file' => 'file'
+    ),
+  )
+
+HOOK_form
+HOOK_form_validate
+HOOK_form_submit
+
+Defines/Validates/Submits the source section of the form, just like any Drupal form.
+
+islandora_autocomplete_url_query_HOOK($id, $query, $index)
+
+In this case the HOOK is equal to the type as returned by the modules implementation of register_autocomplete_source()

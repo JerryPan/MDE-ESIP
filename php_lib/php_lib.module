@@ -1,0 +1,7 @@
+<?php
+
+/**
+ * @file
+ *
+ * Nothing much here, only include files and functions that need to be accessible without a call to module_load_include.
+ */

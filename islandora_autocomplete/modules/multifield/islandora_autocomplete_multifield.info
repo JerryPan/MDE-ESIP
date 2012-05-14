@@ -1,0 +1,6 @@
+name = Islandora Autocomplete Multifield
+description = Allows Autocomplete fields to populate multiple elements.
+package = Islandora Tools
+dependencies[] = islandora_autocomplete
+version = 11.3.1
+core = 6.x

@@ -1,0 +1,92 @@
+<?php
+
+/**
+ * @file
+ *
+ * Install hooks for this module.
+ */
+module_load_include('inc', 'islandora_autocomplete', 'includes/islandora_autocomplete.db');
+// .module file doesn't always run before .install file run
+if (!defined('FILES_ISLANDORA_AUTOCOMPLETE')) {
+  define('FILES_ISLANDORA_AUTOCOMPLETE', file_directory_path() . '/autocomplete');
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function islandora_autocomplete_install() {
+  drupal_install_schema('islandora_autocomplete');
+  $path = FILES_ISLANDORA_AUTOCOMPLETE;
+  file_check_directory($path, FILE_CREATE_DIRECTORY);
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function islandora_autocomplete_uninstall() {
+  drupal_uninstall_schema(TABLE_ISLANDORA_AUTOCOMPLETE);
+  $path = FILES_ISLANDORA_AUTOCOMPLETE;
+  if (file_check_directory($path)) {
+    $files = file_scan_directory($path, '.*');
+    foreach ($files as $file) {
+      unlink($file->filename);
+    }
+    rmdir($path);
+  }
+}
+
+/**
+ * Implementation of hook_schema().
+ *
+ * @return array
+ */
+function islandora_autocomplete_schema() {
+  return array(
+    TABLE_ISLANDORA_AUTOCOMPLETE => array(
+      'description' => t('The main table for storing islandora autocomplete urls.'),
+      'fields' => array(
+        'id' => array(
+          'type' => 'serial',
+          'not null' => TRUE,
+        ),
+        'name' => array(
+          'type' => 'varchar',
+          'length' => ISLANDORA_AUTOCOMPLETE_URL_MAX_NAME_LENGTH,
+          'not null' => TRUE
+        ),
+        'description' => array(
+          'type' => 'varchar',
+          'length' => ISLANDORA_AUTOCOMPLETE_URL_MAX_DESCRIPTION_LENGTH,
+          'not null' => TRUE,
+        ),
+        'source' => array(
+          'type' => 'varchar',
+          'length' => ISLANDORA_AUTOCOMPLETE_URL_MAX_SOURCE_NAME_LENGTH,
+          'not null' => TRUE,
+        ),
+        'fields' => array(
+          'type' => 'int',
+          'default' => 1,
+        ),
+      ),
+      'primary key' => array('id'),
+      'indexes' => array(
+        'name' => array('name'),
+        'source' => array('source'),
+      )
+    )
+  );
+}
+
+/**
+ * Implements hook_update_N().
+ */
+function islandora_autocomplete_update_6000(&$sandbox) {
+  $ret = array();
+  $spec = array(
+    'type' => 'int',
+    'default' => 1,
+  );
+  db_add_field($ret, TABLE_ISLANDORA_AUTOCOMPLETE, 'fields', $spec);
+  return $ret;
+}

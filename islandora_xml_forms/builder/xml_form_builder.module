@@ -1,0 +1,304 @@
+<?php
+
+/**
+ * @file
+ *
+ */
+module_load_include('inc', 'xml_form_builder', 'Edit'); // Needed to make use of AHAH functions...
+module_load_include('inc', 'xml_form_builder', 'Preview'); // Needed to make use of AHAH functions...
+
+/**
+ * Constants
+ */
+define('PERM_XML_FORM_BUILDER_LIST_FORMS', 'List XML Forms');
+define('PERM_XML_FORM_BUILDER_CREATE_FORMS', 'Create XML Forms');
+define('PERM_XML_FORM_BUILDER_EDIT_FORMS', 'Edit XML Forms');
+define('PERM_XML_FORM_BUILDER_DELETE_FORMS', 'Delete XML Forms');
+define('MENU_XML_FORM_BUILDER_MAIN', 'admin/content/xml/form');
+define('MENU_XML_FORM_BUILDER_VIEW', 'admin/content/xml/form/%/view');
+define('MENU_XML_FORM_BUILDER_CREATE', 'admin/content/xml/form/create');
+define('MENU_XML_FORM_BUILDER_COPY', 'admin/content/xml/form/%/copy');
+define('MENU_XML_FORM_BUILDER_EDIT', 'admin/content/xml/form/%/edit');
+define('MENU_XML_FORM_BUILDER_DELETE', 'admin/content/xml/form/%/delete');
+define('MENU_CALLBACK_XML_FORM_BUILDER_EXPORT', 'admin/content/xml/form/%/export');
+define('MENU_CALLBACK_XML_FORM_BUILDER_SAVE', 'admin/content/xml/form/%/edit/save');
+
+/**
+ * Implements hook_menu. Register menus.
+ *
+ * @return array 
+ */
+function xml_form_builder_menu() {
+  /**
+   * Inital page. Lists the existing forms showing a preview of each. The user is provided with links for 
+   * creating, editing, deleting, or copying forms.
+   */
+  $items[MENU_XML_FORM_BUILDER_MAIN] = array(
+    'title' => 'XML Form Builder',
+    'description' => 'Manage XML Based Forms.',
+    'file' => 'Main.inc',
+    'file path' => drupal_get_path('module', 'xml_form_builder'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('xml_form_builder_main'),
+    'access arguments' => array(PERM_XML_FORM_BUILDER_LIST_FORMS),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  /**
+   * View a form.
+   */
+  $items[MENU_XML_FORM_BUILDER_VIEW] = array(
+    'title' => 'Preview Form',
+    'description' => 'Preview a form.',
+    'file' => 'Preview.inc',
+    'file path' => drupal_get_path('module', 'xml_form_builder'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('xml_form_builder_preview', 4),
+    'access arguments' => array(PERM_XML_FORM_BUILDER_LIST_FORMS),
+    'type' => MENU_CALLBACK,
+  );
+  /**
+   * Export the form.
+   */
+  $items[MENU_CALLBACK_XML_FORM_BUILDER_EXPORT] = array(
+    'title' => 'Export Form',
+    'description' => 'Export a form.',
+    'page callback' => 'xml_form_builder_export',
+    'page arguments' => array(4),
+    'access arguments' => array(PERM_XML_FORM_BUILDER_LIST_FORMS),
+    'type' => MENU_CALLBACK,
+  );
+  /**
+   * Presents a form that allows the user to create a new form.
+   */
+  $items[MENU_XML_FORM_BUILDER_CREATE] = array(
+    'title' => 'Create Form',
+    'description' => 'Create a new Form.',
+    'file' => 'Create.inc',
+    'file path' => drupal_get_path('module', 'xml_form_builder'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('xml_form_builder_create'),
+    'access arguments' => array(PERM_XML_FORM_BUILDER_CREATE_FORMS),
+    'type' => MENU_CALLBACK,
+  );
+  /**
+   * Presents a form that allows the user to copy an existing form.
+   */
+  $items[MENU_XML_FORM_BUILDER_COPY] = array(
+    'title' => 'Copy Form',
+    'description' => 'Copy an existing Form.',
+    'file' => 'Copy.inc',
+    'file path' => drupal_get_path('module', 'xml_form_builder'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('xml_form_builder_copy', 4),
+    'access arguments' => array(PERM_XML_FORM_BUILDER_CREATE_FORMS),
+    'type' => MENU_CALLBACK,
+  );
+  /**
+   * Presents a form that allows the user to edit a form.
+   */
+  $items[MENU_XML_FORM_BUILDER_EDIT] = array(
+    'title' => 'Edit Form',
+    'description' => 'Edit a Form.',
+    'file' => 'Edit.inc',
+    'file path' => drupal_get_path('module', 'xml_form_builder'),
+    'page callback' => 'xml_form_builder_edit',
+    'page arguments' => array(4),
+    'access arguments' => array(PERM_XML_FORM_BUILDER_EDIT_FORMS),
+    'type' => MENU_CALLBACK,
+  );
+  /**
+   * Callback used by the edit form to save changes made to the form.
+   */
+  $items[MENU_CALLBACK_XML_FORM_BUILDER_SAVE] = array(
+    'title' => 'Edit Form',
+    'description' => 'Edit a Form.',
+    'file' => 'Edit.inc',
+    'file path' => drupal_get_path('module', 'xml_form_builder'),
+    'page callback' => 'xml_form_builder_edit_save',
+    'page arguments' => array(4),
+    'access arguments' => array(PERM_XML_FORM_BUILDER_EDIT_FORMS),
+    'type' => MENU_CALLBACK,
+  );
+  /**
+   * Presents a form that allows the user to delete a new form.
+   */
+  $items[MENU_XML_FORM_BUILDER_DELETE] = array(
+    'title' => 'Delete Form',
+    'description' => 'Delete a Form.',
+    'file' => 'Delete.inc',
+    'file path' => drupal_get_path('module', 'xml_form_builder'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('xml_form_builder_delete', 4),
+    'access arguments' => array(PERM_XML_FORM_BUILDER_DELETE_FORMS),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_form().
+ * 
+ * @return array
+ */
+function xml_form_builder_forms($form_id, $xml) {
+  module_load_include('inc', 'xml_form_builder', 'XMLFormDatabase');
+  if (XMLFormDatabase::Exists($form_id) && XMLFormDatabase::Valid($form_id)) {
+    return array(
+      $form_id => array(
+        'callback' => 'xml_form_builder_get_form',
+        'callback arguments' => array($form_id)
+      )
+    );
+  }
+  return array(
+    $form_id => array()
+  );
+}
+
+/**
+ * Implements hook_perm. Register permissions.
+ * 
+ * @return array
+ */
+function xml_form_builder_perm() {
+  return array(
+    PERM_XML_FORM_BUILDER_LIST_FORMS,
+    PERM_XML_FORM_BUILDER_CREATE_FORMS,
+    PERM_XML_FORM_BUILDER_EDIT_FORMS,
+    PERM_XML_FORM_BUILDER_DELETE_FORMS,
+  );
+}
+
+/**
+ * Downloads the XML Form Definition to the clients computer..
+ * 
+ * @param string $form_name 
+ *   The name of the form to download.
+ */
+function xml_form_builder_export($form_name) {
+  module_load_include('inc', 'xml_form_builder', 'XMLFormDatabase');
+  header('Content-Type: text/xml', TRUE);
+  header('Content-Disposition: attachment; filename="' . $form_name . '.xml"');
+  $definition = XMLFormDatabase::Get($form_name);
+  echo $definition->saveXML();
+  drupal_goto(MENU_XML_FORM_BUILDER_MAIN);
+  exit();
+}
+
+/**
+ * Gets the path to the copy page for the given form name.
+ *  
+ * @param string $form_name
+ *   The form to load the copy page with,
+ * 
+ * @return string
+ *   The path to the copy page.
+ */
+function xml_form_builder_get_copy_form_path($form_name) {
+  return str_replace('%', $form_name, MENU_XML_FORM_BUILDER_COPY);
+}
+
+/**
+ * Gets the path to the edit page for the given form name.
+ *  
+ * @param string $form_name
+ *   The form to load the edit page with,
+ * 
+ * @return string
+ *   The path to the edit page.
+ */
+function xml_form_builder_get_edit_form_path($form_name) {
+  return str_replace('%', $form_name, MENU_XML_FORM_BUILDER_EDIT);
+}
+
+/**
+ * Gets the path to the view page for the given form name.
+ *  
+ * @param string $form_name
+ *   The form to load the view page with,
+ * 
+ * @return string
+ *   The path to the view page.
+ */
+function xml_form_builder_get_view_form_path($form_name) {
+  return str_replace('%', $form_name, MENU_XML_FORM_BUILDER_VIEW);
+}
+
+/**
+ * Gets the path to the delete page for the given form name.
+ *  
+ * @param string $form_name
+ *   The form to load the delete page with,
+ * 
+ * @return string
+ *   The path to the delete page.
+ */
+function xml_form_builder_get_export_form_path($form_name) {
+  return str_replace('%', $form_name, MENU_CALLBACK_XML_FORM_BUILDER_EXPORT);
+}
+
+/**
+ * Gets the path to the delete page for the given form name.
+ *  
+ * @param string $form_name
+ *   The form to load the delete page with,
+ * 
+ * @return string
+ *   The path to the delete page.
+ */
+function xml_form_builder_get_delete_form_path($form_name) {
+  return str_replace('%', $form_name, MENU_XML_FORM_BUILDER_DELETE);
+}
+
+/**
+ * Gets a Form from the database.
+ * 
+ * @param array $form_state
+ *   The Drupal Form State
+ * @param string $form_name
+ *   The Form to render.
+ * @param string $xml 
+ *   The metadata to prepopulate the form with,
+ * 
+ * @return array
+ *   The Drupal Form, if it exists FALSE otherwise.
+ */
+function xml_form_builder_get_form(array &$form_state, $form_name, $xml = NULL) {
+  module_load_include('inc', 'xml_form_builder', 'XMLFormDatabase');
+  module_load_include('inc', 'xml_form_api', 'XMLForm');
+  module_load_include('inc', 'xml_form_api', 'XMLFormDefinition');
+  if (!XMLFormDatabase::Exists($form_name)) {
+    drupal_set_message(t('The form "%name" does not exist.', array('%name' => $form_name)));
+    return FALSE;
+  }
+  else if (!XMLFormDatabase::Valid($form_name)) {
+    drupal_set_message(t('The drupal form "%name" exists but is not valid please notify the administrator.', array('%name' => $form_name)));
+    return FALSE;
+  }
+  try {
+    $xml_form = new XMLForm($form_state);
+    if (!$xml_form->isInitialized()) { // Was not initialized from storage.
+      $definition = new XMLFormDefinition(XMLFormDatabase::Get($form_name));
+      $document = $definition->createXMLDocument($xml);
+      $form = $definition->getForm();
+      $xml_form->initialize($form, $document);
+    }
+    /**
+     * Deals with a bug in drupals AHAH, where the user would be redirected to a different page.
+     * This is fixed in Drupal 7.
+     * 
+     * This bit of code ensures that the url from which this function is called is the url where the code submits. 
+     * Rather than the last used AHAH callback.
+     */
+    $xml_form['#action'] = $form_state['storage']['#action'] = isset($form_state['storage']['#action']) ? $form_state['storage']['#action'] : url($_GET['q']); // AHAH bug workaround. 
+    $form = $xml_form->toArray($form_state);
+  } catch (Exception $e) {
+    /**
+     * Catch any errors that occured and display them to the user so that they may correct their form definition.
+     */
+    $msg = "File: {$e->getFile()}<br/>Line: {$e->getLine()}<br/>Error: {$e->getMessage()}";
+    drupal_set_message(filter_xss($msg), 'error');
+    return FALSE;
+  }
+  return $form;
+}

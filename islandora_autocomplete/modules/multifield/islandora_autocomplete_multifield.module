@@ -1,0 +1,61 @@
+<?php
+
+/**
+ * @file
+ *
+ * Contains the hooks this module responds to. As well as any
+ * functions that need to be present for every page request.
+ */
+
+/**
+ * Implements hook_elements().
+ */
+function islandora_autocomplete_multifield_elements() {
+  return array(
+    'autocomplete_group' => array(
+      '#input' => TRUE,
+      '#process' => array(
+        'form_expand_ahah',
+        'autocomplete_group_process'
+      ),
+      '#user_data' => array(
+        'format' => NULL
+      )
+    )
+  );
+}
+
+/**
+ * Implements hook_theme().
+ */
+function islandora_autocomplete_multifield_theme() {
+  return array(
+    'autocomplete_group' => array(
+      'file' => 'includes/autocomplete_group.inc'
+    ),
+  );
+}
+
+/**
+ * Implements hook_process() for the autocomplete_group element.
+ *
+ * @param array $element
+ *   The element definition.
+ * @param boolean $edit
+ *   Not used.
+ * @param array $form_state
+ *   The drupal form state.
+ * @param array $complete_form
+ *   The complete drupal form.
+ *
+ * @return array
+ *   The processed element.
+ */
+function autocomplete_group_process(array $element, $edit, array &$form_state, array $complete_form) {
+  module_load_include('inc', 'islandora_autocomplete_multifield', 'includes/autocomplete_group');
+  $element['#user_data']['format'] = isset($element['#user_data']['format']) ? $element['#user_data']['format'] : NULL;
+  $path = $element['#autocomplete_path'];
+  $group = $element['#id'];
+  $format = $element['#user_data']['format'];
+  return autocomplete_group_set_child_multifield_properties($element, $path, $group, $format);
+}
