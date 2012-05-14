@@ -4,5 +4,6 @@ description = Metadata Node: new content type with XML file attachment
 dependencies[] = xml_forms
 dependencies[] = jquery_ui
 dependencies[] = jquery_update
+dependencies[] = ahah_helper
 
 core = 6.x
